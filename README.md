@@ -8,14 +8,14 @@ de scripts Bash.
 
 ## Módulos
 
-| Módulo | Encargado | 
-|---|---|---|
-| Administrador de Tareas (procesos) | Mejia Rondan, Giovanni Patrick| 
+| Módulo | Encargado |
+|---|---|
+| Administrador de Tareas (procesos) | Mejia Rondan, Giovanni Patrick |
 | Comandos Linux | Mejia Rondan, Giovanni Patrick |
 | Shell de Archivos | Chavez Cuno Deivick Paul Eddi |
-| Respaldos | Chavez Cuno Deivick Paul Eddi| 
-| Análisis de Scripts Bash | Cornejo Hurtado Dario Rafael | 
-| Cola de Descargas | Cornejo Hurtado Dario Rafael | 
+| Respaldos | Chavez Cuno Deivick Paul Eddi |
+| Análisis de Scripts Bash | Cornejo Hurtado Dario Rafael |
+| Cola de Descargas | Cornejo Hurtado Dario Rafael |
 
 ## Requisitos
 
