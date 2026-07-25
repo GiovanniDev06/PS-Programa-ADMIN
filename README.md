@@ -8,10 +8,10 @@ de scripts Bash.
 
 ## Módulos
 
-| Módulo | Encargado | Estado |
+| Módulo | Encargado | 
 |---|---|---|
 | Administrador de Tareas (procesos) | Mejia Rondan, Giovanni Patrick| 
-| Comandos Linux | Persona 1 | Mejia Rondan, Giovanni Patrick |
+| Comandos Linux | Mejia Rondan, Giovanni Patrick |
 | Shell de Archivos | Chavez Cuno Deivick Paul Eddi |
 | Respaldos | Chavez Cuno Deivick Paul Eddi| 
 | Análisis de Scripts Bash | Cornejo Hurtado Dario Rafael | 
