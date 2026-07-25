@@ -4,12 +4,14 @@
 #include <string>
 #include "bash_analyzer.h"
 
-// Patron para detectar asignacion de variable estilo Bash: NOMBRE=valor
-// (sin espacios alrededor del '=', como exige la sintaxis de Bash)
-static const std::regex PATRON_VARIABLE(R"(^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)$)");
+// Patron de variable: admite prefijos opcionales (export, local, readonly,
+// declare con flags tipo -i/-x/-a) y asignaciones simples (=) o compuestas (+=)
+static const std::regex PATRON_VARIABLE(
+    R"(^\s*(?:export|local|readonly|declare(?:\s+-[A-Za-z]+)?)?\s*([A-Za-z_][A-Za-z0-9_]*)\+?=(.*)$)"
+);
 
-// Patron para detectar inicio de ciclo for/while
-static const std::regex PATRON_CICLO(R"(^\s*(for|while)\b)");
+// Patron de ciclo: for, while y until (los 3 tipos de ciclo que tiene Bash)
+static const std::regex PATRON_CICLO(R"(^\s*(for|while|until)\b)");
 
 void bash_detectar_variables(const char* ruta_script) {
     std::ifstream archivo(ruta_script);
@@ -27,11 +29,9 @@ void bash_detectar_variables(const char* ruta_script) {
     while (std::getline(archivo, linea)) {
         numero_linea++;
 
-        // Ignorar comentarios
         size_t primer_no_espacio = linea.find_first_not_of(" \t");
-        if (primer_no_espacio != std::string::npos && linea[primer_no_espacio] == '#') {
-            continue;
-        }
+        if (primer_no_espacio == std::string::npos) continue;
+        if (linea[primer_no_espacio] == '#') continue; // comentario
 
         std::smatch coincidencia;
         if (std::regex_search(linea, coincidencia, PATRON_VARIABLE)) {
@@ -59,6 +59,10 @@ void bash_detectar_ciclos(const char* ruta_script) {
 
     while (std::getline(archivo, linea)) {
         numero_linea++;
+
+        size_t primer_no_espacio = linea.find_first_not_of(" \t");
+        if (primer_no_espacio == std::string::npos) continue;
+        if (linea[primer_no_espacio] == '#') continue; // comentario
 
         std::smatch coincidencia;
         if (std::regex_search(linea, coincidencia, PATRON_CICLO)) {
