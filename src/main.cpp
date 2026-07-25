@@ -39,7 +39,7 @@ int main() {
                 respaldos_listar_versiones(".");
                 break;
             case 5:
-                bash_analizar_script("ejemplo.sh");
+                bash_analizar_script("ejemplos/ejemplo.sh");
                 break;
             case 6:
                 descargas_mostrar_progreso();
