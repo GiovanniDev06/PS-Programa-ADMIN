@@ -1,7 +1,7 @@
 # Makefile - Proyecto ADMIN (Programacion de Sistemas UNSA 2026)
 
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Iinclude
+CXXFLAGS = -std=c++17 -Wall -Iinclude -pthread
 OBJDIR = obj
 BINDIR = bin
 TARGET = $(BINDIR)/admin
