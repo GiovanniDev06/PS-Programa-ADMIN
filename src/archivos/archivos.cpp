@@ -9,6 +9,7 @@
 #include <fcntl.h>      // Para opciones de abrir archivos (O_RDONLY, etc.)
 #include <unistd.h>     // Para read, write, close
 #include <cstdio>       // Para rename y remove
+#include <string>
 
 using namespace std;
 
@@ -129,18 +130,45 @@ void archivos_eliminar(const char* ruta) {
     }
 }
 
-void archivos_copiar(const char* origen, const char* destino) {
-    cout << "[En desarrollo] Copiando de " << origen << " a " << destino << "...\n";
-}
+// ==========================================
+// COMMIT 3: Búsqueda Recursiva
+// ==========================================
 
-void archivos_mover(const char* origen, const char* destino) {
-    cout << "[En desarrollo] Moviendo de " << origen << " a " << destino << "...\n";
-}
+// Función auxiliar para buscar dentro de carpetas
+void buscar_recursivo(const string& ruta_actual, const string& patron) {
+    DIR *dir;
+    struct dirent *ent;
 
-void archivos_eliminar(const char* ruta) {
-    cout << "[En desarrollo] Eliminando " << ruta << "...\n";
+    if ((dir = opendir(ruta_actual.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            string nombre_archivo = ent->d_name;
+
+            // Ignorar las carpetas ocultas del sistema "." y ".."
+            if (nombre_archivo == "." || nombre_archivo == "..") {
+                continue;
+            }
+
+            string ruta_completa = ruta_actual + "/" + nombre_archivo;
+
+            // Si el nombre del archivo contiene el patrón que buscamos, lo mostramos
+            if (nombre_archivo.find(patron) != string::npos) {
+                cout << "  [ENCONTRADO] " << ruta_completa << "\n";
+            }
+
+            // Si es un directorio (carpeta), nos metemos a buscar ahí dentro
+            if (ent->d_type == DT_DIR) {
+                buscar_recursivo(ruta_completa, patron);
+            }
+        }
+        closedir(dir);
+    }
 }
 
 void archivos_buscar(const char* patron) {
-    cout << "[En desarrollo] Buscando patrón: " << patron << "...\n";
+    cout << "\n--- Buscando '" << patron << "' desde el directorio actual ---\n";
+    
+    // Iniciar la búsqueda desde el directorio actual "."
+    buscar_recursivo(".", patron);
+    
+    cout << "--- Fin de la búsqueda ---\n";
 }
