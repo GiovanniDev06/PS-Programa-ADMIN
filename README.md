@@ -215,6 +215,85 @@ Nótese que ninguna de las comparaciones dentro de `if [ ]` / `if [[ ]]`, ni el
 texto de los comentarios, fueron marcadas como variables — confirmando que el
 analizador no genera falsos positivos con estos casos.
 
+## Módulo: Cola de Descargas
+
+**Importante: esto es una simulación, no descarga archivos reales de internet.**
+El objetivo es demostrar gestión de una cola concurrente (hilos, memoria
+compartida protegida) tal como pide el enunciado ("cola de descargas,
+progreso y eventos"), sin necesidad de tráfico de red real.
+
+### Diseño
+
+- Cada descarga es un registro con **id, nombre, progreso (0-100%) y estado**
+  (`En cola`, `Descargando`, `Completado`).
+- Al procesar la cola, se lanza **un hilo (`std::thread`) por cada descarga
+  pendiente**, todos corriendo en paralelo — así se demuestra concurrencia
+  real, no una simulación secuencial.
+- El progreso de cada descarga se guarda en una variable **atómica**
+  (`std::atomic<int>`), para que varios hilos puedan escribir/leer el valor
+  sin corromper los datos (evita condiciones de carrera).
+- El registro de eventos está protegido con un **mutex**, para que si dos
+  hilos terminan casi al mismo tiempo, sus mensajes no se mezclen.
+- Los hilos usan `detach()`: el menú del programa sigue respondiendo mientras
+  las descargas avanzan en segundo plano.
+
+### Funciones (`descargas.h` / `descargas.cpp`)
+
+- `descargas_encolar(nombre)` — agrega una nueva descarga a la cola, en
+  estado "En cola", y registra el evento correspondiente.
+- `descargas_procesar_cola()` — toma todas las descargas pendientes de la
+  cola y lanza un hilo por cada una, que simula el avance del progreso en
+  pasos de 10% cada ~150ms hasta llegar a 100%.
+- `descargas_mostrar_progreso()` — imprime el estado actual de todas las
+  descargas registradas, con una barra visual `[####------] 40%`.
+- `descargas_mostrar_eventos()` — imprime el historial completo de eventos
+  (encolada, iniciada, completada) en orden cronológico.
+
+### Submenú del programa (opción 6 del menú principal)
+
+```
+--- Cola de Descargas ---
+1. Encolar nueva descarga
+2. Procesar cola (lanza hilos)
+3. Ver progreso
+4. Ver historial de eventos
+0. Volver al menu principal
+```
+
+1. **Encolar nueva descarga**: pide un nombre (ej. `kernel-linux-6.9.tar.gz`)
+   y lo agrega a la cola. En este punto la descarga queda en 0% y estado
+   "En cola" — todavía no avanza.
+2. **Procesar cola**: toma todo lo que esté pendiente y arranca los hilos.
+   A partir de aquí el progreso empieza a subir en segundo plano.
+3. **Ver progreso**: se puede llamar varias veces seguidas para ver cómo
+   sube el porcentaje de cada descarga mientras los hilos corren.
+4. **Ver historial de eventos**: muestra el log completo, útil para
+   verificar el orden de encolado/inicio/finalización.
+
+### Ejemplo de uso y resultado
+
+Encolando `kernel-linux-6.9.tar.gz` y `backup-sistema.zip`, luego procesando
+la cola y consultando el progreso dos veces seguidas:
+
+```
+--- Estado de descargas ---
+  id 1 | kernel-linux-6.9.tar.gz | [----------] 0% | Descargando
+  id 2 | backup-sistema.zip | [----------] 0% | Descargando
+
+--- Estado de descargas ---
+  id 1 | kernel-linux-6.9.tar.gz | [########--] 80% | Descargando
+  id 2 | backup-sistema.zip | [########--] 80% | Descargando
+
+--- Historial de eventos ---
+  1. Encolada: kernel-linux-6.9.tar.gz
+  2. Encolada: backup-sistema.zip
+  3. Iniciando descarga: kernel-linux-6.9.tar.gz
+  4. Iniciando descarga: backup-sistema.zip
+```
+
+Nótese que ambas descargas avanzan al mismo ritmo porque corren en hilos
+paralelos independientes, no una después de la otra.
+
 ## Flujo de trabajo en Git
 
 1. Crear una rama por módulo/función asignada (ej. `feature/bash-analyzer`)
