@@ -6,6 +6,9 @@
 #include <grp.h>        // Para obtener el nombre del grupo
 #include <ctime>        // Para formatear la fecha
 #include <cstring>
+#include <fcntl.h>      // Para opciones de abrir archivos (O_RDONLY, etc.)
+#include <unistd.h>     // Para read, write, close
+#include <cstdio>       // Para rename y remove
 
 using namespace std;
 
@@ -67,9 +70,64 @@ void archivos_estadisticas(const char* ruta) {
 }
 
 // ==========================================
-// PLACEHOLDERS PARA LOS SIGUIENTES COMMITS
-// (Se dejan para que el Makefile compile sin errores)
+// COMMIT 2: Manipulación de Archivos
 // ==========================================
+
+void archivos_copiar(const char* origen, const char* destino) {
+    cout << "\n--- Copiando archivo ---\n";
+    
+    // Abrir origen en modo solo lectura
+    int fuente = open(origen, O_RDONLY);
+    if (fuente < 0) {
+        perror("Error al abrir archivo de origen");
+        return;
+    }
+
+    // Abrir/crear destino en modo escritura, truncar si existe, con permisos 0666
+    int dest = open(destino, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (dest < 0) {
+        perror("Error al crear archivo de destino");
+        close(fuente);
+        return;
+    }
+
+    char buffer[4096];
+    ssize_t bytes_leidos;
+    
+    // Leer del origen y escribir en el destino en bloques
+    while ((bytes_leidos = read(fuente, buffer, sizeof(buffer))) > 0) {
+        if (write(dest, buffer, bytes_leidos) != bytes_leidos) {
+            perror("Error al escribir en el destino");
+            break;
+        }
+    }
+
+    close(fuente);
+    close(dest);
+    cout << "  [OK] Copia completada de '" << origen << "' a '" << destino << "'\n";
+}
+
+void archivos_mover(const char* origen, const char* destino) {
+    cout << "\n--- Moviendo archivo ---\n";
+    
+    // rename() cambia la ruta del archivo en el sistema
+    if (rename(origen, destino) == 0) {
+        cout << "  [OK] Archivo movido exitosamente a '" << destino << "'\n";
+    } else {
+        perror("Error al mover el archivo");
+    }
+}
+
+void archivos_eliminar(const char* ruta) {
+    cout << "\n--- Eliminando archivo ---\n";
+    
+    // remove() elimina el enlace al archivo (equivalente a rm)
+    if (remove(ruta) == 0) {
+        cout << "  [OK] Archivo eliminado exitosamente: '" << ruta << "'\n";
+    } else {
+        perror("Error al eliminar el archivo");
+    }
+}
 
 void archivos_copiar(const char* origen, const char* destino) {
     cout << "[En desarrollo] Copiando de " << origen << " a " << destino << "...\n";
