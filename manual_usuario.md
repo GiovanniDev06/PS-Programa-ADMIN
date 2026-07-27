@@ -1,6 +1,6 @@
 # Manual de Usuario — PS-Programa ADMIN
 
-**Entregable de:** Persona 1 (Mejia Rondan, Giovanni Patrick)
+**Entregable de:** Mejia Rondan, Giovanni Patrick; Cornejo Hurtado, Dario Rafael; Chavez Cuno, Deivick Paul Eddi
 **Proyecto:** Programación de Sistemas, UNSA 2026
 
 Este manual explica, desde el punto de vista de quien va a **usar** el
