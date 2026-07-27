@@ -57,6 +57,113 @@ Cada módulo expone sus funciones con un prefijo fijo para evitar choques de nom
 - `bash_*` — Análisis de Scripts Bash
 - `descargas_*` — Cola de Descargas
 
+## Módulo: Administrador de Tareas
+
+Trabaja directamente sobre el pseudo-sistema de archivos `/proc`, la misma
+fuente que usan herramientas estándar como `ps` y `top`, en vez de invocar
+esos comandos externos.
+
+**Funciones (`procesos.h` / `procesos.cpp`):**
+- `procesos_listar()` — recorre `/proc` (cada subcarpeta numérica es un PID)
+  y muestra PID, nombre, estado y memoria residente (`VmRSS`) de cada
+  proceso, leyendo `/proc/<pid>/status`.
+- `procesos_buscar(nombre)` — igual que listar, pero filtra por coincidencia
+  parcial del nombre.
+- `procesos_uso_cpu_memoria(pid)` — muestra el detalle de un proceso puntual:
+  estado, memoria RSS y tiempo de CPU acumulado (usuario + sistema), este
+  último calculado a partir de los campos `utime`/`stime` de
+  `/proc/<pid>/stat` divididos entre los ticks de reloj del sistema
+  (`sysconf(_SC_CLK_TCK)`).
+- `procesos_finalizar(pid)` / `procesos_suspender(pid)` / `procesos_reanudar(pid)`
+  — envían `SIGTERM`, `SIGSTOP` y `SIGCONT` respectivamente con `kill()` de
+  `<signal.h>`, e informan si la señal se entregó o si falló (por ejemplo,
+  por falta de permisos o porque el proceso ya no existe).
+- `procesos_arbol()` — arma la relación padre-hijo de todos los procesos
+  (usando el `PPid` de `/proc/<pid>/status`) y la imprime en forma de árbol
+  recursivo, comenzando en `init` (PID 1) cuando está disponible.
+
+### Submenú del programa (opción 1 del menú principal)
+
+```
+--- Administrador de Tareas ---
+1. Listar procesos
+2. Buscar proceso por nombre
+3. Ver uso de CPU y memoria (por PID)
+4. Finalizar proceso (PID)
+5. Suspender proceso (PID)
+6. Reanudar proceso (PID)
+7. Ver arbol de procesos
+0. Volver al menu principal
+```
+
+### Ejemplo de uso y resultado
+
+Suspendiendo y luego reanudando un proceso (`sleep 60`, PID 738):
+
+```
+Opcion: 5
+PID: 738
+[procesos] suspender (SIGSTOP) enviado correctamente al PID 738
+
+Opcion: 6
+PID: 738
+[procesos] reanudar (SIGCONT) enviado correctamente al PID 738
+```
+
+Verificando con `ps -o pid,stat,cmd -p 738` después de reanudar, el proceso
+queda en estado `S` (durmiendo), no `T` (detenido) — confirmando que la
+reanudación funcionó correctamente.
+
+## Módulo: Comandos Linux
+
+Ejecuta comandos de shell arbitrarios capturando su salida estándar y su
+salida de error **por separado**, y guarda un historial de todo lo
+ejecutado en la sesión.
+
+**Funciones (`comandos.h` / `comandos.cpp`):**
+- `comandos_ejecutar(comando)` — ejecuta el comando dos veces con `popen()`:
+  una vez redirigiendo `stderr` a `/dev/null` (para quedarse solo con la
+  salida estándar) y otra redirigiendo `stdout` a `/dev/null` (para
+  quedarse solo con los errores). Guarda ambos resultados y agrega el
+  comando al historial.
+- `comandos_mostrar_salida()` — reimprime la última salida estándar
+  capturada.
+- `comandos_mostrar_errores()` — reimprime los últimos errores capturados.
+- `comandos_mostrar_historial()` — lista, numerados en orden cronológico,
+  todos los comandos ejecutados en la sesión.
+
+### Submenú del programa (opción 3 del menú principal)
+
+```
+--- Comandos Linux ---
+1. Ejecutar comando
+2. Mostrar ultima salida
+3. Mostrar ultimos errores
+4. Mostrar historial
+0. Volver al menu principal
+```
+
+### Ejemplo de uso y resultado
+
+```
+Opcion: 1
+Comando a ejecutar: echo hola mundo
+[comandos] Comando ejecutado: echo hola mundo
+--- Salida ---
+hola mundo
+
+Opcion: 1
+Comando a ejecutar: comando_que_no_existe_xyz
+[comandos] Comando ejecutado: comando_que_no_existe_xyz
+--- Errores ---
+sh: 1: comando_que_no_existe_xyz: not found
+
+Opcion: 4
+--- Historial de comandos ---
+1. echo hola mundo
+2. comando_que_no_existe_xyz
+```
+
 ## Módulo: Análisis de Scripts Bash
 
 Lee un script `.sh` línea por línea y detecta patrones de sintaxis Bash,
